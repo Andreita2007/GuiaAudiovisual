@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Audiovisual</title>
+    <style>
+        /* Estilos Generales */
+        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
+        
+        /* Franja Superior (Navbar) */
+        .franja-superior { background-color: #1e293b; color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .franja-superior h1 { margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 0.5px; }
+
+        /* Sección de Bienvenida e Introducción */
+        .encabezado-introduccion { text-align: center; max-width: 800px; margin: 40px auto 20px auto; padding: 0 20px; }
+        .encabezado-introduccion h2 { color: #334155; font-size: 28px; margin-bottom: 10px; }
+        .encabezado-introduccion p { color: #64748b; font-size: 16px; line-height: 1.6; margin: 0; }
+
+        /* Contenedor de Tarjetas */
+        .contenedor { display: flex; justify-content: center; gap: 40px; margin-top: 30px; padding: 20px; flex-wrap: wrap; }
+        .tarjeta-materia { background: white; border: 1px solid #e2e8f0; padding: 35px 25px; border-radius: 12px; width: 280px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .tarjeta-materia:hover { transform: translateY(-5px); }
+        
+        /* Textos de las Tarjetas */
+        .tarjeta-materia h3 { color: #1e293b; font-size: 22px; margin-top: 0; margin-bottom: 12px; }
+        .tarjeta-materia p { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
+        
+        /* Botones */
+        .btn-entrar { display: inline-block; background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; transition: background-color 0.2s; }
+        .btn-entrar:hover { background-color: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <header class="franja-superior">
+        <h1>Guía Audiovisual</h1>
+    </header>
+
+    <section class="encabezado-introduccion">
+        <p>
+            Esta plataforma ha sido creada para el proyecto de los estudiantes de 5to Año Sección "B", diseñado con el objetivo de apoyar y fortalecer el aprendizaje en las materias de <strong>Biología</strong> y <strong>Ciencias Naturales</strong>.
+        </p>
+        <h2>Selecciona el Año Escolar</h2>
+    </section>
+    
+    <main class="contenedor">
+        <div class="tarjeta-materia">
+            <h3>Segundo Año</h3>
+            <p>Accede a las guías de contenidos.</p>
+            <a href="{%url 'ver_materia' '2'%}" class="btn-entrar">Ver Videos</a>
+        </div>
+
+        <div class="tarjeta-materia">
+            <h3>Cuarto Año</h3>
+            <p>Accede a las guías de contenidos.</p>
+            <a href="{%url 'ver_materia' '4'%}" class="btn-entrar">Ver Videos</a>
+        </div>
+    </main>
+
+</body>
+</html>

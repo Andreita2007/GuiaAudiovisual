@@ -1,0 +1,15 @@
+{
+    "version":2,
+    "builds": [
+        {
+        "src": "Guia_Audiovisual/wsgi.py",
+        "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+        "src": "/(.*)",
+        "dest": "Guia_Audiovisual/wsgi.py"
+        }
+    ]
+}
