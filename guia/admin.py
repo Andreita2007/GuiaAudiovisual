@@ -4,7 +4,7 @@ from .models import ContenidoAudiovisual
 
 @admin.register(ContenidoAudiovisual)
 class ContenidoAudiovisualAdmin (admin.ModelAdmin):
-    list_display = ('titulo', 'anio', 'descripcion_corta', 'video')
+    list_display = ('titulo', 'anio', 'descripcion_corta', 'video_url', 'imagen')
     list_filter = ('anio',)
     search_fields = ('titulo', 'descripcion')
     fieldsets = (
@@ -12,7 +12,7 @@ class ContenidoAudiovisualAdmin (admin.ModelAdmin):
             'fields': ('titulo', 'descripcion')
         }),
         ('Clasificación y Archivo', {
-            'fields': ('anio', 'video')
+            'fields': ('anio', 'video_url', 'imagen')
         })
     )
 
