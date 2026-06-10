@@ -1,15 +1,24 @@
 {
-    "version":2,
+    "version": 2,
     "builds": [
         {
-        "src": "Guia_Audiovisual/wsgi.py",
-        "use": "@vercel/python"
+            "src": "Guia_Audiovisual/wsgi.py",
+            "use": "@vercel/python"
+        },
+        {
+            "src": "build_files.sh",
+            "use": "@vercel/static-build",
+            "config": { "distDir": "staticfiles" }
         }
     ],
     "routes": [
         {
-        "src": "/(.*)",
-        "dest": "Guia_Audiovisual/wsgi.py"
+            "src": "/static/(.*)",
+            "dest": "/staticfiles/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "Guia_Audiovisual/wsgi.py"
         }
     ]
 }

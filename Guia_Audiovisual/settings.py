@@ -22,12 +22,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-rwv=v_-%$1srilu%0d_zlz5+!g*$+)d8yr3kzixh^17d30w8$t'
+# En Vercel se define la variable de entorno SECRET_KEY; en local usa el valor por defecto.
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-rwv=v_-%$1srilu%0d_zlz5+!g*$+)d8yr3kzixh^17d30w8$t'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En Vercel define la variable de entorno DEBUG=False. En local queda True por defecto.
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
+
+# Necesario para que el login del admin funcione sobre HTTPS en Vercel.
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+]
 
 
 # Application definition
@@ -44,6 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise sirve los archivos estáticos (CSS/JS del admin) en Vercel.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,6 +130,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# Carpeta donde 'collectstatic' junta todos los estáticos para producción (Vercel).
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# WhiteNoise comprime y sirve los estáticos sin necesidad de un servidor aparte.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

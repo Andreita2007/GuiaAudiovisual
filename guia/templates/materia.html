@@ -106,12 +106,96 @@
         }
         
         /* Mensaje por si todavía no hay videos creados en el admin */
-        .sin-contenido { 
-            text-align: center; 
-            color: #8fa399; 
-            font-style: italic; 
-            margin-top: 50px; 
-            font-size: 15px; 
+        .sin-contenido {
+            text-align: center;
+            color: #8fa399;
+            font-style: italic;
+            margin-top: 50px;
+            font-size: 15px;
+        }
+
+        /* Capa oscura de fondo del modal del video */
+        .modal-video {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(45, 74, 62, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        /* Cuando está activo se muestra centrado */
+        .modal-video.activo {
+            display: flex;
+        }
+
+        /* Caja blanca que contiene el reproductor */
+        .modal-contenido {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            width: 100%;
+            max-width: 860px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            position: relative;
+            animation: aparecer 0.3s ease;
+        }
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Título dentro del modal */
+        .modal-titulo {
+            color: #2d4a3e;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 4px 8px 14px 8px;
+            padding-right: 40px;
+        }
+
+        /* Contenedor responsivo 16:9 para el iframe del video */
+        .video-responsive {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* proporción 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+        }
+        .video-responsive iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Botón para cerrar el modal */
+        .cerrar-modal {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: #e67e94;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            box-shadow: 0 2px 8px rgba(230, 126, 148, 0.4);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .cerrar-modal:hover {
+            background: #d85d75;
+            transform: rotate(90deg);
         }
     </style>
 </head>
@@ -135,8 +219,8 @@
                 <div class="enlace-video-contenedor">
                     {% if elemento.video_url %}
                         <p style="margin: 0; font-size: 14px; color: #44594e; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                            <span><strong>📺 Material de apoyo:</strong> Disponible para revisar</span> 
-                            <a href="{{ elemento.video_url }}" target="_blank" style="background: #e67e94; color: white; padding: 6px 14px; border-radius: 15px; font-weight: bold; text-decoration: none; font-size: 13px; box-shadow: 0 2px 8px rgba(230, 126, 148, 0.3); transition: background 0.2s;" onmouseover="this.style.background='#d85d75'" onmouseout="this.style.background='#e67e94'">
+                            <span><strong>📺 Material de apoyo:</strong> Disponible para revisar</span>
+                            <a href="{{ elemento.video_url }}" class="btn-ver-video" data-url="{{ elemento.video_url }}" data-titulo="{{ elemento.titulo }}" style="background: #e67e94; color: white; padding: 6px 14px; border-radius: 15px; font-weight: bold; text-decoration: none; font-size: 13px; box-shadow: 0 2px 8px rgba(230, 126, 148, 0.3); transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='#d85d75'" onmouseout="this.style.background='#e67e94'">
                                 Ver video explicativo ✨
                             </a>
                         </p>
@@ -151,6 +235,122 @@
             <p class="sin-contenido">Por los momentos no se han subido guías audiovisuales para este año escolar.</p>
         {% endfor %}
     </main>
+
+    <!-- Modal donde se reproduce el video sin salir de la página -->
+    <div class="modal-video" id="modalVideo">
+        <div class="modal-contenido">
+            <button class="cerrar-modal" id="cerrarModal" aria-label="Cerrar video">&times;</button>
+            <h4 class="modal-titulo" id="modalTitulo"></h4>
+            <div class="video-responsive">
+                <iframe id="iframeVideo" src="" title="Reproductor de video"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const modal      = document.getElementById('modalVideo');
+            const iframe     = document.getElementById('iframeVideo');
+            const titulo     = document.getElementById('modalTitulo');
+            const btnCerrar  = document.getElementById('cerrarModal');
+
+            // Convierte cualquier formato de enlace de YouTube al formato "embed".
+            // Es tolerante a URLs mal formadas (p. ej. youtu.be/embed/ID).
+            function obtenerEmbed(url) {
+                if (!url) return '';
+                let id = '';
+                // Palabras de ruta que NO son el ID del video
+                const palabrasRuta = ['embed', 'shorts', 'live', 'watch', 'v', 'e'];
+
+                try {
+                    const u = new URL(url);
+
+                    // 1) Caso normal: ?v=ID
+                    id = u.searchParams.get('v') || '';
+
+                    // 2) Si no, se busca en los segmentos de la ruta el primero
+                    //    que parezca un ID de YouTube (descartando palabras como "embed").
+                    if (!id) {
+                        const segmentos = u.pathname.split('/').filter(Boolean);
+                        for (const seg of segmentos) {
+                            if (palabrasRuta.indexOf(seg) === -1) {
+                                id = seg;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // 3) Respaldo: buscar un ID de 11 caracteres dentro del texto del enlace
+                    const m = url.match(/[A-Za-z0-9_-]{11}/);
+                    id = m ? m[0] : '';
+                }
+
+                id = (id || '').split('/')[0].split('?')[0].split('&')[0];
+
+                // Validación final: un ID de YouTube tiene 11 caracteres válidos.
+                // Si quedó algo distinto, se intenta rescatar con la búsqueda por patrón.
+                if (!/^[A-Za-z0-9_-]{11}$/.test(id)) {
+                    const m = url.match(/[A-Za-z0-9_-]{11}/);
+                    id = m ? m[0] : id;
+                }
+
+                if (!id) return '';
+
+                // Dominio "nocookie" para una incrustación más permisiva
+                let src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&playsinline=1';
+                // Solo se añade origin si estamos en un servidor real (http/https).
+                // Si la página se abre como archivo (file://) NO se añade, porque rompería el reproductor.
+                if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                    src += '&origin=' + encodeURIComponent(window.location.origin);
+                }
+                return src;
+            }
+
+            function abrirModal(url, tituloVideo) {
+                const embed = obtenerEmbed(url);
+                if (!embed) {
+                    // Si no se pudo interpretar el enlace, se abre en pestaña nueva como respaldo
+                    window.open(url, '_blank');
+                    return;
+                }
+                iframe.src = embed;
+                titulo.textContent = tituloVideo || '';
+                modal.classList.add('activo');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function cerrarModal() {
+                modal.classList.remove('activo');
+                iframe.src = ''; // detiene la reproducción
+                document.body.style.overflow = '';
+            }
+
+            // Cada botón "Ver video explicativo" abre el modal
+            document.querySelectorAll('.btn-ver-video').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    abrirModal(btn.dataset.url, btn.dataset.titulo);
+                });
+            });
+
+            btnCerrar.addEventListener('click', cerrarModal);
+
+            // Cerrar al hacer clic fuera de la caja del video
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) cerrarModal();
+            });
+
+            // Cerrar con la tecla Escape
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('activo')) {
+                    cerrarModal();
+                }
+            });
+        })();
+    </script>
 
 </body>
 </html>
