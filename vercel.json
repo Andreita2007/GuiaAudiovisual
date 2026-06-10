@@ -3,19 +3,16 @@
     "builds": [
         {
             "src": "Guia_Audiovisual/wsgi.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "build_files.sh",
-            "use": "@vercel/static-build",
-            "config": { "distDir": "staticfiles" }
+            "use": "@vercel/python",
+            "config": {
+                "includeFiles": [
+                    "staticfiles/**",
+                    "guia/templates/**"
+                ]
+            }
         }
     ],
     "routes": [
-        {
-            "src": "/static/(.*)",
-            "dest": "/staticfiles/$1"
-        },
         {
             "src": "/(.*)",
             "dest": "Guia_Audiovisual/wsgi.py"
